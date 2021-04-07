@@ -1,0 +1,171 @@
+<html>
+    <head>
+        <style>
+            html, body {
+                margin: 0;
+            }
+            #play-area {
+                width: 100%;
+                height: 100%;
+            }
+
+            input[type="checkbox"].snekbox {
+                margin: 0;
+                width: 15px;
+                height: 15px;
+            }
+        </style>
+    </head>
+<body>
+    <div id="play-area"></div>
+    <script type="application/javascript">
+        window.onload = function () {
+            const playArea = document.getElementById('play-area');
+            let snekLength;
+            let gameSpeed = 127;
+            let snekXPos;
+            let snekYPos;
+            let nxtSnekXPos;
+            let nxtSnekYPos;
+            let appleXPos;
+            let appleYPos;
+            let i;
+            let j;
+            let maxWidth;
+            let maxHeight;
+            let snekPath = [];
+            let snekPixelDimensions = { x: 15, y: 15}
+            function populateCheckBoxes() {
+                for (i = 1; i * snekPixelDimensions.x < playArea.clientHeight; i++ ) {
+                    for (j = 0; j * snekPixelDimensions.y < playArea.clientWidth; j++) {
+                        playArea.appendChild(createCheckBox(i - 1, j));
+                    }
+                }
+                snekLength = 3;
+                maxHeight = i - 1;
+                maxWidth = j;
+            }
+
+            function createCheckBox(x, y) {
+                const ele = document.createElement("input");
+                ele.id = getId(x, y);
+                ele.className = 'snekbox';
+                ele.type = 'checkbox';
+                ele.addEventListener("click", function (){
+                    alert('Dude! stop clicking the snekboxes!')
+                    this.checked = !this.checked;
+                });
+                return ele;
+            }
+
+            function getId(x, y) {
+                return 'checkbox:' + x + ':' + y;
+            }
+
+            function checkSomeBoxes() {
+                clear();
+                // move snake in next pos
+                snekXPos += nxtSnekXPos;
+                snekYPos += nxtSnekYPos;
+
+                // snake over game world?
+                if (snekXPos < 0 || snekXPos > maxHeight || snekYPos > maxWidth || snekYPos < 0) {
+                    endGame();
+                }
+
+                //snake bite apple?
+                if (snekXPos === appleXPos && snekYPos === appleYPos) {
+                    snekLength++;
+                    checkTheBox(appleXPos, appleYPos, false)
+                    appleXPos = Math.floor(Math.random() * maxHeight);
+                    appleYPos = Math.floor(Math.random() * maxWidth);
+                }
+
+                // paint snake
+                for (let i = 0; i < snekPath.length; i++) {
+                    checkTheBox(snekPath[i].x, snekPath[i].y, true);
+                    console.log (snekPath[i].x, snekPath[i].y);
+                    //snake bites it's tail?
+                    if (snekPath[i].x === snekXPos
+                        && snekPath[i].y === snekYPos) {
+                        endGame();
+                    }
+                }
+
+                // paint apple
+                checkTheBox(appleXPos, appleYPos, true, true)
+
+                //set snake trail
+                snekPath.push({ x: snekXPos, y: snekYPos });
+                while (snekPath.length > snekLength) {
+                    snekPath.shift();
+                }
+            }
+
+            function checkTheBox(x, y, checked = false, isApple = false){
+                const ele = document.getElementById(getId(x, y));
+                if (ele) {
+                    ele.checked = checked;
+                    if (isApple) {
+                        ele.style.border = "1px solid red";
+                    }
+                }
+            }
+
+            function endGame() {
+                alert('You killed the snek, hope you are happy now! Refresh page if you want to play again');
+            }
+
+            function clear() {
+                for (i = 1; i * snekPixelDimensions.x < playArea.clientHeight; i++) {
+                    for (j = 0; j * snekPixelDimensions.y < playArea.clientWidth; j++) {
+                        checkTheBox(i - 1, j);
+                    }
+                }
+            }
+
+            function startGame() {
+                window.alert('Starting a new game, please don\'t kill the snek!');
+                snekXPos = Math.floor(Math.random() * maxHeight);
+                snekYPos = Math.floor(Math.random() * maxWidth);
+                appleXPos = Math.floor(Math.random() * maxHeight);
+                appleYPos = Math.floor(Math.random() * maxWidth);
+                console.log (getId(snekXPos, snekYPos));
+                nxtSnekXPos = -1;
+                nxtSnekYPos = 0;
+                checkTheBox(snekXPos, snekYPos, true);
+                checkTheBox(appleXPos, appleYPos, true, true);
+                document.addEventListener("keydown", keyDownEvent);
+                setInterval(checkSomeBoxes, gameSpeed);
+            }
+
+            function keyDownEvent(e) {
+                console.log(e);
+                switch (e.keyCode) {
+                    case 37: // right
+                        nxtSnekXPos = 0;
+                        nxtSnekYPos = -1;
+                        break;
+                    case 39: // left
+                        nxtSnekXPos = 0;
+                        nxtSnekYPos = 1;
+                        break;
+                    case 38: // up
+                        nxtSnekXPos = -1;
+                        nxtSnekYPos = 0;
+                        break;
+                    case 40: // down
+                        nxtSnekXPos = 1;
+                        nxtSnekYPos = 0;
+                        break;
+                    case 32:
+                        window.alert('Game paused press, click ok to continue');
+                        break;
+                }
+            }
+            populateCheckBoxes();
+            startGame();
+        }
+    </script>
+</body>
+</html>
